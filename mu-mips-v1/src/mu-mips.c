@@ -315,6 +315,106 @@ void handle_instruction()
 	4. Perform operations to correctly execute instruction	
 	5. Update Current/Next State	
 	*/
+	uint32_t addr;
+	addr = mem_read_32(CURRENT_STATE.PC);
+	uint8_t op, rs, rt, rd, shamt, funct;
+	op = addr >> 26;
+	
+	if(op == 0)//R TYPE
+	{
+		rs = addr >> 21;
+		rs = rs & 0b00011111;
+		rt = addr >> 16;
+		rt = rt & 0b00011111;
+		rd = addr >> 11;
+		rd = rd & 0b00011111;
+		shamt = addr >> 6;
+		shamt = shamt & 0b00011111;
+		funct = addr;
+		funct = funct & 0b00111111;
+		
+		switch(funct) 
+		{
+			case 0b100000 : //ADD
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+
+			case 0b100001 : //ADDU
+				*rs + *rt = *rd;
+			
+			case 0b100100 : //AND
+				*rs & *rt = *rd;
+					
+			case 0b011010 : //DIV
+				
+			case 0b011011 : //DIVU
+				
+			case 0b001001 : //JALR
+				uint8_t temp = CURRENT_STATE>REGS[rs];
+				*rd = (CURRENT_STATE.PC + 8);//32 bit PC vs 5 bit rd??
+				//figure out how to do it after T+1
+				NEXT_STATE.PC = temp;
+			case 0b001000 : //JR
+				uint8_t temp = *rs;
+				//after T=1??
+				CURRENT_STATE.PC = temp;//32 bit??
+			case 0b010000 : //MFHI
+				*rd = CURRENT_STATE.HI;
+			case 0b010010 : // MFLO
+				*rd = CURRENT_STATE.LO;
+			case 0b010001 : //MTHI
+				//figure out T-2 and T-1
+				CURRENT_STATE.HI = *rs;
+			case 0b010011 : //MTLO
+				//^^
+				CURRENT_STATE.LO = *rs;
+			case 0b011000 : //MULT
+				
+			case 0b011001 : //MULTU
+				
+			case 0b100111 : //NOR
+				*rd = !(*rs | *rt);
+			case 0b100101 : //OR
+				*rd = *rs | *rt;
+			case 0b000000 : //SLL
+				//ask about operation
+			case 0b101010 : //SLT
+				if (*rs < *rt)
+				{}
+				else {}
+			case 0b000011 : //SRA
+				
+			case 0b000010 : //SRL
+				
+			case 0b100010 : //SUB
+				*rd = *rs - *rt;
+			case 0b100011 : //SUBU
+				*rd = *rs -*rt;
+			case 0b001100 : //SYSCALL
+				CURRENT_STATE.REGS[2] = 0xA;
+			case 0b100110 : XOR
+				*rd = *rs ^ *rd;
+			
+			default : break;	
+		}
+		
+	}
+	
+	else if(op == 2 || op == 3)//J TYPE
+	{
+		if(op == 2)//J
+		{
+			
+		}
+		else if(op == 3)//JAL
+		{
+			
+		}
+	}
+	
+	else //I TYPE
+	{
+		switch(op)
+	}
 }
 
 
