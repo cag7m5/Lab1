@@ -307,26 +307,9 @@ void handle_instruction()
 {
 	/*IMPLEMENT THIS*/
 	/* execute one instruction at a time. Use/update CURRENT_STATE and and NEXT_STATE, as necessary.*/
-
-	/*
-	CODE OUTLINE
-
-	1. Load instruction using mem_read_32 function
-
-	2. Increment instruction to separate op, rs, rt, rd, shamt, funct, address, immediate
-
-	3. Use switch-case function with opcode to determine which instruction we have
-
-	4. Perform operations to correctly execute instruction
-
-	5. Update Current/Next State
-
-
-	*/
-
-	
-	
-
+	/* get instruction using mem_read_32 function from above */
+	/* use opcode(first 6 bits) to figure out type of instruction */
+	/* do operation for that function from the manual
 }
 
 
@@ -359,19 +342,6 @@ void print_program(){
 /************************************************************/
 void print_instruction(uint32_t addr){
 	/*IMPLEMENT THIS*/
-
-	/*
-
-	1. Same as HandleInstruction
-
-	2. Same as HandleInstruction
-
-	3. Same as HandleInstruction
-
-	4. Instead of performing operation, simply print the instructions inputs/outputs
-
-	*/
-
 }
 
 /***************************************************************/
