@@ -347,6 +347,12 @@ void print_program(){
 /************************************************************/
 void print_instruction(uint32_t addr){
 	/*IMPLEMENT THIS*/
+	/*
+	1. Same as HandleInstruction
+	2. Same as HandleInstruction
+	3. Same as HandleInstruction
+	4. Instead of performing operation, simply print the instructions inputs/outputs
+	*/
 }
 
 /***************************************************************/
