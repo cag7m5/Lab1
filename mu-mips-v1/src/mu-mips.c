@@ -316,22 +316,22 @@ void handle_instruction()
 	5. Update Current/Next State	
 	*/
 	uint32_t addr;
-	addr = mem_read_32(CURRENT_STATE.PC);
+	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
 	uint8_t op, rs, rt, rd, shamt, funct;
-	op = addr >> 26;
+	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
 	
 	if(op == 0)//R TYPE
 	{
-		rs = addr >> 21;
-		rs = rs & 0b00011111;
-		rt = addr >> 16;
-		rt = rt & 0b00011111;
-		rd = addr >> 11;
-		rd = rd & 0b00011111;
-		shamt = addr >> 6;
-		shamt = shamt & 0b00011111;
-		funct = addr;
-		funct = funct & 0b00111111;
+		rs = addr >> 21;	//rs is located in bits 21-25
+		rs = rs & 0b00011111;	//Bit mask 3 leftmost bits
+		rt = addr >> 16;	//rt is located in bits 16-20
+		rt = rt & 0b00011111;	//Bit mask 3 leftmost bits
+		rd = addr >> 11;	//rd is located in bits 11-15
+		rd = rd & 0b00011111;	//Bit mask 3 leftmost bits
+		shamt = addr >> 6;	//shamt is located in bits 6-10
+		shamt = shamt & 0b00011111;	//Bit mask 3 leftmost bits
+		funct = addr;		//function code is located in bits 0-5
+		funct = funct & 0b00111111;	//Bit mask 2 leftmost bits
 		
 		switch(funct) 
 		{
