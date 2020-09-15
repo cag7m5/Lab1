@@ -317,7 +317,7 @@ void handle_instruction()
 	*/
 	uint32_t addr;
 	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
-	uint8_t op, rs, rt, rd, shamt, funct;
+	uint8_t op, rs, rt, rd, shamt, funct, inter;
 	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
 	
 	if(op == 0)//R TYPE
@@ -413,13 +413,35 @@ void handle_instruction()
 	
 	else //I TYPE
 	{
+		rs = addr >> 21;	//rs is located in bits 21-25
+		rs = rs & 0b00011111;	//Bit mask 3 leftmost bits
+		rt = addr >> 16;	//rt is located in bits 16-20
+		rt = rt & 0b00011111;	//Bit mask 3 leftmost bits
+		inter = addr;           //Immediate is located in bits 0-15
+		
 		switch(op)
 		{
 			
-			//ADDI
-			//ADDIU
-			//ANDI
-			//BEQ
+			case 0b001000 ://ADDI
+				
+				NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[inter];
+				
+			case 0b001001 ://ADDIU
+				
+				NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[inter];
+				
+			case 0b001100 ://ANDI
+				
+				NEXT_STATE.REGS[rt] = 0x0000 || (CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[inter]);
+				
+			case 0b000100 ://BEQ
+				
+				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
+					if(CURRENT_STATE.REGS[rs] = CURRENT_STATE.REGS[rt]) {
+						
+						NEXT_STATE.PC = CURRENT_STATE.PC + target;
+						
+					}
 			//BGEZ
 			//BGTZ
 			//BLEZ
