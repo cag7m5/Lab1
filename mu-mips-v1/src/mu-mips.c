@@ -442,8 +442,22 @@ void handle_instruction()
 						NEXT_STATE.PC = CURRENT_STATE.PC + target;
 						
 					}
-			//BGEZ
-			//BGTZ
+			case 0b00001  ://BGEZ
+				
+				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
+					if(CURRENT_STATE.REGS[rs] >> 4 = 0) {
+						
+						NEXT_STATE.PC = CURRENT_STATE.PC + target;
+					}
+				
+			case 0b000111 ://BGTZ
+				
+				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
+					if((CURRENT_STATE.REGS[rs] != 0b00000 ) && (CURRENT_STATE.REGS[rs] >> 4 = 0)) {
+						
+						NEXT_STATE.PC = CURRENT_STATE.PC + target;
+					}
+				
 			//BLEZ
 			//BLTZ
 			//BNE
