@@ -399,102 +399,164 @@ void handle_instruction()
 		
 	}
 	
-	else if(op == 2 || op == 3)//J TYPE
-	{
-		if(op == 2)//J
-		{
-			
-		}
-		else if(op == 3)//JAL
-		{
-			
-		}
-	}
-	
-	else //I TYPE
-	{
-		rs = addr >> 21;	//rs is located in bits 21-25
-		rs = rs & 0b00011111;	//Bit mask 3 leftmost bits
-		rt = addr >> 16;	//rt is located in bits 16-20
-		rt = rt & 0b00011111;	//Bit mask 3 leftmost bits
-		inter = addr;           //Immediate is located in bits 0-15
-		
-		switch(op)
-		{
-			
-			case 0b001000 ://ADDI
-				
-				NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[inter];
-				
-			case 0b001001 ://ADDIU
-				
-				NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[inter];
-				
-			case 0b001100 ://ANDI
-				
-				NEXT_STATE.REGS[rt] = 0x0000 || (CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[inter]);
-				
-			case 0b000100 ://BEQ
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if(CURRENT_STATE.REGS[rs] = CURRENT_STATE.REGS[rt]) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-						
-					}
-			case 0b00001  ://BGEZ
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if(CURRENT_STATE.REGS[rs] >> 4 = 0) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-					}
-				
-			case 0b000111 ://BGTZ
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if((CURRENT_STATE.REGS[rs] != 0b00000 ) && (CURRENT_STATE.REGS[rs] >> 4 = 0)) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-					}
-				
-			case 0b000110 ://BLEZ
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if((CURRENT_STATE.REGS[rs] = 0b00000 ) && (CURRENT_STATE.REGS[rs] >> 4 = 1)) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-					}
-				
-			case 0b00000  ://BLTZ
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if(CURRENT_STATE.REGS[rs] >> 4 = 1) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-					}
-				
-			case 0b000101 ://BNE
-				
-				uint32_t target = CURRENT_STATE.REGS[inter] || 0b00
-					if(CURRENT_STATE.REGS[rs] != CURRENT_STATE.REGS[rt]) {
-						
-						NEXT_STATE.PC = CURRENT_STATE.PC + target;
-					}
-				
-			//LB
-			//LH
-			//LUI
-			//LW
-			//ORI
-			//SB
-			//SH
-			//SLTI
-			//SW
-			//XORI
-				
-		}
-	}
+   uint16_t immediate;
+   immediate = addr & 0b1111111111111111; //first 16 bits of addr
+    
+    else if(op == 2 || op == 3)//J TYPE
+    {
+        uint32_t target;
+        target = addr & 0x03FFFFFF; //Puts 26 bits of PC into target  
+        
+        if(op == 2)//J
+        {
+            NEXT_STATE.PC = target << 2;   //Shift program counter left 2 bits delayed by 1 instruction
+        }
+        else if(op == 3)//JAL
+        {
+            NEXT_STATE.PC = target << 2;   //shift program counter left 2 bits 
+            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
+        }
+    }
+    
+    else //I TYPE
+    {  
+        uint32_t target, offset;
+        target = immediate >> 2;    //target = immediate shifted left 2 bits
+        if (target >> 15)   //negative number
+        {
+            target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
+        }
+        if (offset >> 15)   //negative number
+        {
+            offset = 0xFFFF0000 | offset;   //offset is sign extended if negative
+        }
+        offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
+        
+        switch(op)
+        {
+            case 0b001000:  //ADDI
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+                
+            case 0b001001:  //ADDIU
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+            
+            case 0b001100:  //ANDI
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;
+                
+            case 0b000100:  //BEQ
+                if (CURRENT_STATE.REGS[rt] == CURRENT_STATE.REGS[rs])
+                {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + target;   //If equal, program branches to target address w/ delay of one instruction
+                }
+                else
+                {
+                    printf("rt != rs\n");
+                }
+            
+            case 0b000001:  //BGEZ or BLTZ
+                if (CURRENT_STATE.REGS[rt] == 0b00000)  //BLTZ
+                {
+                    if (CURRENT_STATE.REGS[rs] >> 31)   //Check if sign bit is set
+                    {
+                        NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                        printf("Sign bit of rs is set\n");
+                    }
+                    else    //BGEZ
+                    {
+                        NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                        printf("Sign bit of rs is not set\n");
+                    }
+                }
+            
+            
+            case 0b000111:  //BGTZ
+                if ((CURRENT_STATE.REGS[rs] != 0x00000000) && ~(CURRENT_STATE.REGS[rs] >> 31)) //if rs != 0 and sign bit of rs is cleared
+                {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + target; //If so, program branches to target address w/ delay of one instruction
+                }
+                else 
+                {
+                    printf("rs = 0 or sign bit is not cleared\n");
+                }            
+            
+            case 0b000110:  //BLEZ
+                if ((CURRENT_STATE.REGS[rs] == 0x00000000) || (CURRENT_STATE.REGS[rs] >> 31))   //if rs = 0 or sign bit of rs is set
+                {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                }
+                else
+                {
+                    printf("rs != 0 or sign bit is cleared\n");
+                }           
+     
+            case 0b000101:  //BNE
+                if (CURRENT_STATE.REGS[rt] != CURRENT_STATE.REGS[rs])   //compare current contents of rs & rt
+                {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                }
+                else
+                {
+                    printf("rs = rt\n");
+                }
+                
+            case 0b100000:  //LB
+                uint32_t byte;
+                byte = 0xFF & mem_read_32(offset);  //load first byte of address into byte
+                if (byte >> 7)  //negative number
+                {
+                    byte = 0xFFFFFF00 | byte;   //sign extended
+                }    
+                NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
+           
+            case 0b100001:  //LH
+                uint32_t hw;
+                hw = 0xFFFF & mem_read_32(offset);  //load halfword of address into hw
+                if (hw >> 15)   //negative number
+                {
+                    hw = 0xFFFF0000 | hw;   //sign extended
+                }    
+                NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
+                
+            case 0b001111:  //LUI
+                NEXT_STATE.REGS[rt] = immediate << 16;
+            
+            case 0b100011:  //LW
+                NEXT_STATE.REGS[rt] = mem_read_32(offset);  //load contents of offset into rt
+                
+            case 0b001101:  //ORI
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;
+                
+            
+            case 0b101000:  //SB
+                mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFF);   //Stores least significant byte of rt into offset
+            
+            case 0b101001:  //SH
+                mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant word of rt into offset
+            
+            case 0b001010:  //SLTI
+                uint32_t result;
+                if (CURRENT_STATE.REGS[rs] < immediate)
+                {
+                    result = 0x00000001;    //result = 1
+                }
+                else
+                {
+                    result = 0x00000000;    //result = 0
+                } 
+                NEXT_STATE.REGS[rt] = result;   //place result into rt   
+            
+            case 0b101011:  //SW
+                mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores contentes of rt into offset
+            
+            case 0b001110:  //XORI
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;
+                
+            default: 
+                break;
+
+                
+        }
+    }
 }
 
 
