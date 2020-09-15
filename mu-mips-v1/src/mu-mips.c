@@ -339,46 +339,46 @@ void handle_instruction()
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
 
 			case 0b100001 : //ADDU
-				*rs + *rt = *rd;
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
 			
 			case 0b100100 : //AND
-				*rs & *rt = *rd;
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
 					
 			case 0b011010 : //DIV
 				
 			case 0b011011 : //DIVU
 				
 			case 0b001001 : //JALR
-				uint8_t temp = CURRENT_STATE>REGS[rs];
-				*rd = (CURRENT_STATE.PC + 8);//32 bit PC vs 5 bit rd??
+				uint8_t temp = CURRENT_STATE.REGS[rs];
+				*CURRENT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
 				//figure out how to do it after T+1
 				NEXT_STATE.PC = temp;
 			case 0b001000 : //JR
-				uint8_t temp = *rs;
+				uint8_t temp = CURRENT_STATE.REGS[rs];
 				//after T=1??
-				CURRENT_STATE.PC = temp;//32 bit??
+				CURRENT_STATE.PC = temp;
 			case 0b010000 : //MFHI
-				*rd = CURRENT_STATE.HI;
+				CURRENT_STATE.REGS[rd] = CURRENT_STATE.HI;
 			case 0b010010 : // MFLO
-				*rd = CURRENT_STATE.LO;
+				CURRENT_STATE.REGS[rd] = CURRENT_STATE.LO;
 			case 0b010001 : //MTHI
 				//figure out T-2 and T-1
-				CURRENT_STATE.HI = *rs;
+				CURRENT_STATE.HI = CURRENT_STATE.REGS[rs];
 			case 0b010011 : //MTLO
 				//^^
-				CURRENT_STATE.LO = *rs;
+				CURRENT_STATE.LO = CURRENT_STATE.REGS[rs];
 			case 0b011000 : //MULT
 				
 			case 0b011001 : //MULTU
 				
 			case 0b100111 : //NOR
-				*rd = !(*rs | *rt);
+				NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);
 			case 0b100101 : //OR
-				*rd = *rs | *rt;
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];
 			case 0b000000 : //SLL
 				//ask about operation
 			case 0b101010 : //SLT
-				if (*rs < *rt)
+				if (CURRENT_STATE.REGS[rs] < CURRENT_STATE.REGS[rt])
 				{}
 				else {}
 			case 0b000011 : //SRA
@@ -386,13 +386,13 @@ void handle_instruction()
 			case 0b000010 : //SRL
 				
 			case 0b100010 : //SUB
-				*rd = *rs - *rt;
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
 			case 0b100011 : //SUBU
-				*rd = *rs -*rt;
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
 			case 0b001100 : //SYSCALL
 				CURRENT_STATE.REGS[2] = 0xA;
-			case 0b100110 : XOR
-				*rd = *rs ^ *rd;
+			case 0b100110 : //XOR
+				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] ^ CURRENT_STATE.REGS[rt];
 			
 			default : break;	
 		}
@@ -414,6 +414,29 @@ void handle_instruction()
 	else //I TYPE
 	{
 		switch(op)
+		{
+			
+			//ADDI
+			//ADDIU
+			//ANDI
+			//BEQ
+			//BGEZ
+			//BGTZ
+			//BLEZ
+			//BLTZ
+			//BNE
+			//LB
+			//LH
+			//LUI
+			//LW
+			//ORI
+			//SB
+			//SH
+			//SLTI
+			//SW
+			//XORI
+				
+		}
 	}
 }
 
@@ -453,6 +476,117 @@ void print_instruction(uint32_t addr){
 	3. Same as HandleInstruction
 	4. Instead of performing operation, simply print the instructions inputs/outputs
 	*/
+	uint32_t addr;
+	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
+	uint8_t op, rs, rt, rd, shamt, funct;
+	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
+	
+	if(op == 0)//R TYPE
+	{
+		rs = addr >> 21;	//rs is located in bits 21-25
+		rs = rs & 0b00011111;	//Bit mask 3 leftmost bits
+		rt = addr >> 16;	//rt is located in bits 16-20
+		rt = rt & 0b00011111;	//Bit mask 3 leftmost bits
+		rd = addr >> 11;	//rd is located in bits 11-15
+		rd = rd & 0b00011111;	//Bit mask 3 leftmost bits
+		shamt = addr >> 6;	//shamt is located in bits 6-10
+		shamt = shamt & 0b00011111;	//Bit mask 3 leftmost bits
+		funct = addr;		//function code is located in bits 0-5
+		funct = funct & 0b00111111;	//Bit mask 2 leftmost bits
+		
+		switch(funct)//print out each function by op code
+		{
+			case 0b100000 : //ADD
+				printf("\nADD $%d, $%d, $%d", rd, rs, rt);
+			case 0b100001 : //ADDU	
+				printf("\nADDU $%d, $%d, $%d", rd, rs, rt);
+			case 0b100100 : //AND
+				printf("\nAND $%d, $%d, $%d", rd, rs, rt);
+			case 0b011010 : //DIV
+				printf("\nDIV $%d, $%d", rs, rt);
+			case 0b011011 : //DIVU
+				printf("\nDIV $%d, $%d", rs, rt);
+			case 0b001001 : //JALR
+				printf("\nJALR $%d, rs);
+				printf("\nJALR $%d, $%d", rd, rs);
+			case 0b001000 : //JR
+				printf("\nJR $%d", rs);
+			case 0b010000 : //MFHI
+				printf("\nMFHI $%d", rd);
+			case 0b010010 : // MFLO
+				printf("\nMFLO $%d", rd);
+			case 0b010001 : //MTHI
+				printf("\nMTHI $%d", rs);
+			case 0b010011 : //MTLO
+				printf("\nMTLO $%d", rs);
+			case 0b011000 : //MULT
+				printf("\nMULT $%d, $%d", rs, rt);
+			case 0b011001 : //MULTU
+				printf("\nMULTU $%d, $%d", rs, rt);
+			case 0b100111 : //NOR
+				printf("\nNOR $%d, $%d, $%d", rd, rs, rt);
+			case 0b100101 : //OR
+				printf("\nOR $%d, $%d, $%d", rd, rs, rt);
+			case 0b000000 : //SLL
+				printf("\nSLL $%d, $%d, $%d", rd, rt, shamt);
+			case 0b101010 : //SLT
+				printf("\nSLT $%d, $%d, $%d", rd, rs, rt);
+			case 0b000011 : //SRA
+				printf("\nSRA $%d, $%d, $%d", rd, rt, shamt);
+			case 0b000010 : //SRL
+				printf("\nSRL $%d, $%d, $%d", rd, rt, shamt);
+			case 0b100010 : //SUB
+				printf("\nSUB $%d, $%d, $%d", rd, rs, rt);
+			case 0b100011 : //SUBU
+				printf("\nSUBU $%d, $%d, $%d", rd, rs, rt);
+			case 0b001100 : //SYSCALL
+				printf("\nSYSCALL");
+			case 0b100110 : //XOR
+				printf("\nXOR $%d, $%d, $%d", rd, rs, rt);
+			default : break;	
+		}
+		
+	}
+	
+	else if(op == 2 || op == 3)//J TYPE
+	{
+		if(op == 2)//J
+		{
+			
+		}
+		else if(op == 3)//JAL
+		{
+			
+		}
+	}
+	
+	else //I TYPE
+	{
+		switch(op)
+		{
+			//ADDI
+			//ADDIU
+			//ANDI
+			//BEQ
+			//BGEZ
+			//BGTZ
+			//BLEZ
+			//BLTZ
+			//BNE
+			//LB
+			//LH
+			//LUI
+			//LW
+			//ORI
+			//SB
+			//SH
+			//SLTI
+			//SW
+			//XORI
+		}
+	}
+	
+	
 }
 
 /***************************************************************/
