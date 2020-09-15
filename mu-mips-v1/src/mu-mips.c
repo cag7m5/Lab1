@@ -410,11 +410,13 @@ void handle_instruction()
         if(op == 2)//J
         {
             NEXT_STATE.PC = target << 2;   //Shift program counter left 2 bits delayed by 1 instruction
+			printf("J %x\n", target);	//Error check
         }
         else if(op == 3)//JAL
         {
             NEXT_STATE.PC = target << 2;   //shift program counter left 2 bits 
             NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
+			printf("JAL %x\n", target);	//error check
         }
     }
     
@@ -436,17 +438,21 @@ void handle_instruction()
         {
             case 0b001000:  //ADDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+				printf("ADDI $%d, $%d, %x\n", rt, rs, immediate);	//error check
                 
             case 0b001001:  //ADDIU
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+				printf("ADDIU $%d, $%d, %x\n", rt, rs, immediate);	//error check
             
             case 0b001100:  //ANDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;
+				printf("ANDI $%d, $%d, %x\n", rt, rs, immediate);	//error check
                 
             case 0b000100:  //BEQ
                 if (CURRENT_STATE.REGS[rt] == CURRENT_STATE.REGS[rs])
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;   //If equal, program branches to target address w/ delay of one instruction
+					printf("BEQ $%d, $%d, %x\n", rs, rt, immediate);	//error check
                 }
                 else
                 {
@@ -460,11 +466,13 @@ void handle_instruction()
                     {
                         NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
                         printf("Sign bit of rs is set\n");
+						printf("BLTZ $%d, %x\n", rs, immediate);	//error check
                     }
                     else    //BGEZ
                     {
                         NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
                         printf("Sign bit of rs is not set\n");
+						printf("BGEX $%d, %x\n", rs, immediate);	//error check
                     }
                 }
             
@@ -473,6 +481,7 @@ void handle_instruction()
                 if ((CURRENT_STATE.REGS[rs] != 0x00000000) && ~(CURRENT_STATE.REGS[rs] >> 31)) //if rs != 0 and sign bit of rs is cleared
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target; //If so, program branches to target address w/ delay of one instruction
+					printf("BGTZ $%d, %x\n", rs, immediate);	//error check
                 }
                 else 
                 {
@@ -483,6 +492,7 @@ void handle_instruction()
                 if ((CURRENT_STATE.REGS[rs] == 0x00000000) || (CURRENT_STATE.REGS[rs] >> 31))   //if rs = 0 or sign bit of rs is set
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+					printf("BLEZ $%d, %x\n", rs, immediate);	//error check
                 }
                 else
                 {
@@ -493,6 +503,7 @@ void handle_instruction()
                 if (CURRENT_STATE.REGS[rt] != CURRENT_STATE.REGS[rs])   //compare current contents of rs & rt
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+					printf("BNE $%d, $%d, %x\n", rt, rs, immediate);	//error check
                 }
                 else
                 {
@@ -507,6 +518,7 @@ void handle_instruction()
                     byte = 0xFFFFFF00 | byte;   //sign extended
                 }    
                 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
+				printf("LB $%d, %x($%d)\n", rt, immediate, rs);	//error check
            
             case 0b100001:  //LH
                 uint32_t hw;
@@ -516,22 +528,27 @@ void handle_instruction()
                     hw = 0xFFFF0000 | hw;   //sign extended
                 }    
                 NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
+				printf("LH $%d, %x($%d)\n", rt, immediate, rs);	//error check
                 
             case 0b001111:  //LUI
                 NEXT_STATE.REGS[rt] = immediate << 16;
+				printf("LUI $%d, %x\n", rt, immediate);	//error check
             
             case 0b100011:  //LW
                 NEXT_STATE.REGS[rt] = mem_read_32(offset);  //load contents of offset into rt
+				printf("LW $%d, %x($%d)\n", rt, immediate, rs);	//error check
                 
             case 0b001101:  //ORI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;
-                
+				printf("ORI $%d, $%d, %x\n", rt, rs, immediate);	//error check               
             
             case 0b101000:  //SB
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFF);   //Stores least significant byte of rt into offset
+				printf("SB $%d, %x($%d)\n", rt, immediate, rs);	//error check
             
             case 0b101001:  //SH
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant word of rt into offset
+				printf("SH $%d, %x($%d)\n", rt, immediate, rs);	//error check
             
             case 0b001010:  //SLTI
                 uint32_t result;
@@ -543,13 +560,16 @@ void handle_instruction()
                 {
                     result = 0x00000000;    //result = 0
                 } 
-                NEXT_STATE.REGS[rt] = result;   //place result into rt   
+                NEXT_STATE.REGS[rt] = result;   //place result into rt 
+				printf("SLTI $%d, $%d, %x\n", rt, rs, immediate);	//error check 
             
             case 0b101011:  //SW
                 mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores contentes of rt into offset
+				printf("SW $%d, %x($%d)\n", rt, immediate, rs);	//error check
             
             case 0b001110:  //XORI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;
+				printf("XORI $%d, $%d, %x\n", rt, rs, immediate);	//error check
                 
             default: 
                 break;
