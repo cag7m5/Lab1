@@ -346,60 +346,79 @@ void handle_instruction()
 			case 0b100100 : //AND
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
 					
-			case 0b011010 : //DIV
-				
-			case 0b011011 : //DIVU
-				
-			case 0b001001 : //JALR
-				temp = CURRENT_STATE.REGS[rs];
-				CURRENT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
-				//figure out how to do it after T+1
-				NEXT_STATE.PC = temp;
+		 	case 0b011010 : //DIV
+                	{
+                    		if(CURRENT_STATE.REGS[rt])//make sure rt is not 0
+                    		{
+                        		NEXT_STATE.LO = CURRENT_STATE.REGS[rs] / CURRENT_STATE.REGS[rt];
+                        		NEXT_STATE.HI = CURRENT_STATE.REGS[rs] % CURRENT_STATE.REGS[rt];
+                    		}
+               		}
+            		case 0b011011 : //DIVU
+                	{
+                    		if(CURRENT_STATE.REGS[rt])//make sure rt is not 0
+                    		{
+                        		NEXT_STATE.LO = (0 | CURRENT_STATE.REGS[rs]) / (0 | CURRENT_STATE.REGS[rt]);
+                        		NEXT_STATE.HI = (0 | CURRENT_STATE.REGS[rs]) % (0 | CURRENT_STATE.REGS[rt]);
+                    		}
+                	}
+           		case 0b001001 : //JALR
+                		temp = CURRENT_STATE.REGS[rs];
+                		NEXT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
+                		NEXT_STATE.PC = temp;
 			case 0b001000 : //JR
-				temp = CURRENT_STATE.REGS[rs];
-				//after T=1??
-				CURRENT_STATE.PC = temp;
-			case 0b010000 : //MFHI
-				CURRENT_STATE.REGS[rd] = CURRENT_STATE.HI;
-			case 0b010010 : // MFLO
-				CURRENT_STATE.REGS[rd] = CURRENT_STATE.LO;
-			case 0b010001 : //MTHI
-				//figure out T-2 and T-1
-				CURRENT_STATE.HI = CURRENT_STATE.REGS[rs];
-			case 0b010011 : //MTLO
-				//^^
-				CURRENT_STATE.LO = CURRENT_STATE.REGS[rs];
-			case 0b011000 : //MULT
-				
-			case 0b011001 : //MULTU
-				
-			case 0b100111 : //NOR
-				NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);
-			case 0b100101 : //OR
-				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];
-			case 0b000000 : //SLL
-				//ask about operation
-			case 0b101010 : //SLT
-				if (CURRENT_STATE.REGS[rs] < CURRENT_STATE.REGS[rt])
-				{}
-				else {}
-			case 0b000011 : //SRA
-				
-			case 0b000010 : //SRL
-				
-			case 0b100010 : //SUB
-				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
-			case 0b100011 : //SUBU
-				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
-			case 0b001100 : //SYSCALL
-				CURRENT_STATE.REGS[2] = 0xA;
-			case 0b100110 : //XOR
+              		  	temp = CURRENT_STATE.REGS[rs];
+                		NEXT_STATE.PC = temp;
+            		case 0b010000 : //MFHI
+               			 NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
+            		case 0b010010 : // MFLO
+              		  NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
+           		case 0b010001 : //MTHI
+                		NEXT_STATE.HI = CURRENT_STATE.REGS[rs];
+            		case 0b010011 : //MTLO
+                		NEXT_STATE.LO = CURRENT_STATE.REGS[rs];
+            		case 0b011000 : //MULT
+				{
+                    			uint64_t result = CURRENT_STATE.REGS[rs] * CURRENT_STATE.REGS[rt];
+                    			NEXT_STATE.LO = result;
+                    			NEXT_STATE.HI = result << 32;
+				}
+            		case 0b011001 : //MULTU
+                		{
+                   			 uint64_t result = (0 | CURRENT_STATE.REGS[rs]) * (0 | CURRENT_STATE.REGS[rt]);
+                   			 NEXT_STATE.LO = result;
+                    			 NEXT_STATE.HI = result << 32;
+                		}
+           		case 0b100111 : //NOR
+                		NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);
+            		case 0b100101 : //OR
+               	 		NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];
+            		case 0b000000 : //SLL
+               			NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << shamt;
+            		case 0b101010 : //SLT
+                		{
+                   			if (((signed)(CURRENT_STATE.REGS[rs])) < ((signed)(CURRENT_STATE.REGS[rt])))
+                        			NEXT_STATE.REGS[rd] = 1;
+                   			else
+                        			NEXT_STATE.REGS[rd] = 0;
+                		}
+            		case 0b000011 : //SRA
+                    		NEXT_STATE.REGS[rd] = ((signed)(CURRENT_STATE.REGS[rt])) >> shamt;
+	    		case 0b000010 : //SRL
+                    		NEXT_STATE.REGS[rd] = ((unsigned)(CURRENT_STATE.REGS[rt])) >> shamt;//unsigned forces it to fill zeros
+            		case 0b100010 : //SUB
+                		NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+            		case 0b100011 : //SUBU
+               			NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+            		case 0b001100 : //SYSCALL
+                		CURRENT_STATE.REGS[2] = 0xA;
+            		case 0b100110 : //XOR
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] ^ CURRENT_STATE.REGS[rt];
-			
-			default : break;	
-		}
-		
-	}
+
+            		default : break;
+        }
+
+    }
 	
   
     
@@ -440,7 +459,7 @@ void handle_instruction()
         }
         offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
         
-        switch(funct)
+        switch(op)
         {
             case 0b001000:  //ADDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
@@ -462,7 +481,7 @@ void handle_instruction()
                 }
             
             case 0b000001:  //BGEZ or BLTZ
-                if (CURRENT_STATE.REGS[rt] == 0b00000)  //BLTZ
+                if (rt == 0b00000)  //BLTZ
                 {
                     if (CURRENT_STATE.REGS[rs] >> 31)   //Check if sign bit is set
                     {
@@ -717,7 +736,7 @@ void print_instruction(uint32_t addr){
         }
         offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
         
-        switch(funct)
+        switch(op)
         {
             case 0b001000:  //ADDI
                printf("\nADDI $%d, $%d, %d", rt, rs, immediate);
@@ -732,7 +751,7 @@ void print_instruction(uint32_t addr){
                 printf("\nBEQ $%d, $%d, %d", rs, rt, immediate);
             
             case 0b000001:  //BGEZ or BLTZ 
-			if (CURRENT_STATE.REGS[rt] == 0b00000)  //BLTZ
+			if (rt == 0b00000)  //BLTZ
 			{
 		       printf("\nBLTZ $%d, %d", rs, immediate);
 			}
