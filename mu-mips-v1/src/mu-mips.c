@@ -720,56 +720,64 @@ void print_instruction(uint32_t addr){
         switch(funct)
         {
             case 0b001000:  //ADDI
-               printf("\nADDI $%d, $%d, $%d", rt, rs, immediate);
+               printf("\nADDI $%d, $%d, %d", rt, rs, immediate);
                 
             case 0b001001:  //ADDIU
-                printf("\nADDIU $%d, $%d, $%d", rt, rs, immediate);
+                printf("\nADDIU $%d, $%d, %d", rt, rs, immediate);
             
             case 0b001100:  //ANDI
-                printf("\nANDI");
+                printf("\nANDI $%d, $%d, %d", rt, rs, immediate");
                 
             case 0b000100:  //BEQ
-               printf("\nBEQ");
+                printf("\nBEQ $%d, $%d, %d", rs, rt, immediate);
             
-            case 0b000001:  //BGEZ or BLTZ
-               
-            	printf("\nBGEZ or BLTZ");
+            case 0b000001:  //BGEZ or BLTZ 
+			if (CURRENT_STATE.REGS[rt] == 0b00000)  //BLTZ
+			{
+		       printf("\nBLTZ $%d, %d", rs, immediate);
+			}
+			else	//BGEZ 0b00001
+	        {
+				printf("\nBGEZ $%d, %d", rs, immediate);	       
+	        }
             
             case 0b000111:  //BGTZ
-               printf("\nBGTZ");
+               printf("\nBGTZ $%d, %d", rs, immediate);
             
             case 0b000110:  //BLEZ
-               printf("\nBLEZ");
+               printf("\nBLEZ $%d, %d", rs, immediate);
             case 0b000101:  //BNE
-               printf("\nBNE");
+               printf("\nBNE $%d, $%d, %d", rs, rt, immediate);
                 
             case 0b100000:  //LB
-               printf("\nLB");
+               printf("\nLB %d, %d($%d)", rt, immediate, rs);
            	
             case 0b100001:  //LH
-               printf("\nLH");
+               printf("\nLH $%d, %d($%d)", rt, immediate, rs);
                 
             case 0b001111:  //LUI
-               printf("\nLUI");
+               printf("\nLUI $%d, %d", rt, immediate);
             
             case 0b100011:  //LW
-               printf("\nLW");
-            case 0b001101:  //ORI
-               
-                printf("\nORI");
+               printf("\nLW $%d, %d($%d)", rt, immediate, rs);
+					   
+            case 0b001101:  //ORI  
+                printf("\nORI $%d, $%d, %d", rt, rs, immediate);
             
             case 0b101000:  //SB
-              printf("\nSB");
+              printf("\nSB $%d, %d($%d)", rt, immediate, rs);
+					   
             case 0b101001:  //SH
-            	printf("\nSH");
+            	printf("\nSH $%d, %d($%d)", rt, immediate, rs);
+					   
             case 0b001010:  //SLTI
-              printf("\nSLTI");
+              printf("\nSLTI $%d, $%d, %d", rt, rs, immediate);
             
             case 0b101011:  //SW
-               printf("\nSW");
+               printf("\nSW $%d, %d($%d)", rt, immediate, rs);
             
             case 0b001110:  //XORI
-             	printf("\nXORI");
+             	printf("\nXORI $%d, $%d, %d", rt, rs, immediate);
                 
             default: 
                 break;
