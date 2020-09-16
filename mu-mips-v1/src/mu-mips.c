@@ -317,8 +317,10 @@ void handle_instruction()
 	*/
 	uint32_t addr;
 	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
-	uint8_t op, rs, rt, rd, shamt, funct;
+	uint8_t op, rs, rt, rd, shamt, funct, temp;
 	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
+	uint16_t immediate;
+   	immediate = addr & 0b1111111111111111; //first 16 bits of addr
 	
 	if(op == 0)//R TYPE
 	{
@@ -349,12 +351,12 @@ void handle_instruction()
 			case 0b011011 : //DIVU
 				
 			case 0b001001 : //JALR
-				uint8_t temp = CURRENT_STATE.REGS[rs];
-				*CURRENT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
+				temp = CURRENT_STATE.REGS[rs];
+				CURRENT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
 				//figure out how to do it after T+1
 				NEXT_STATE.PC = temp;
 			case 0b001000 : //JR
-				uint8_t temp = CURRENT_STATE.REGS[rs];
+				temp = CURRENT_STATE.REGS[rs];
 				//after T=1??
 				CURRENT_STATE.PC = temp;
 			case 0b010000 : //MFHI
@@ -399,8 +401,7 @@ void handle_instruction()
 		
 	}
 	
-   uint16_t immediate;
-   immediate = addr & 0b1111111111111111; //first 16 bits of addr
+  
     
     else if(op == 2 || op == 3)//J TYPE
     {
@@ -500,14 +501,15 @@ void handle_instruction()
                 }
                 
             case 0b100000:  //LB
-                uint32_t byte;
-                byte = 0xFF & mem_read_32(offset);  //load first byte of address into byte
-                if (byte >> 7)  //negative number
-                {
-                    byte = 0xFFFFFF00 | byte;   //sign extended
-                }    
-                NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
-           
+		{ 
+			uint32_t byte;
+                	byte = 0xFF & mem_read_32(offset);  //load first byte of address into byte
+               		 if (byte >> 7)  //negative number
+               		 {
+               		     byte = 0xFFFFFF00 | byte;   //sign extended
+               		 }    
+               			 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
+		}
             case 0b100001:  //LH
                 uint32_t hw;
                 hw = 0xFFFF & mem_read_32(offset);  //load halfword of address into hw
@@ -595,10 +597,11 @@ void print_instruction(uint32_t addr){
 	3. Same as HandleInstruction
 	4. Instead of performing operation, simply print the instructions inputs/outputs
 	*/
-	uint32_t addr;
-	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
+	
 	uint8_t op, rs, rt, rd, shamt, funct;
 	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
+        uint16_t immediate;
+   	immediate = addr & 0b1111111111111111; //first 16 bits of addr
 	
 	if(op == 0)//R TYPE
 	{
@@ -667,8 +670,7 @@ void print_instruction(uint32_t addr){
 		
 	}
 	
-	 uint16_t immediate;
-   immediate = addr & 0b1111111111111111; //first 16 bits of addr
+	
     
     else if(op == 2 || op == 3)//J TYPE
     {
