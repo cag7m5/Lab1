@@ -419,30 +419,13 @@ void handle_instruction()
         }
 
     }
-	
-  
     
-    else if(op == 2 || op == 3)//J TYPE
-    {
-        uint32_t target;
-        target = addr & 0x03FFFFFF; //Puts 26 bits of PC into target  
-        
-        if(op == 2)//J
-        {
-            NEXT_STATE.PC = target << 2;   //Shift program counter left 2 bits delayed by 1 instruction
-        }
-        else if(op == 3)//JAL
-        {
-            NEXT_STATE.PC = target << 2;   //shift program counter left 2 bits 
-            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
-        }
-    }
-    
-    else //I TYPE
+    else //I or J TYPE
     {  
-        uint32_t target, offset;
-        target = immediate >> 2;    //target = immediate shifted left 2 bits
+        uint32_t target, offset, jTarget;
+        target = immediate << 2;    //target = immediate shifted left 2 bits
         offset = immediate;
+		jTarget = addr & 0x03FFFFFF; //Puts 26 bits of PC into jTarget
         rs = addr >> 21;
         rs = rs & 0b00011111;
         funct = addr;
@@ -461,6 +444,13 @@ void handle_instruction()
         
         switch(op)
         {
+			case 0b000010:	//J
+				NEXT_STATE.PC = jTarget << 2;   //Shift program counter left 2 bits delayed by 1 instruction
+				
+			case 0b000011:	//JAL
+				NEXT_STATE.PC = target << 2;   //shift program counter left 2 bits 
+            	NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
+				
             case 0b001000:  //ADDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
                 
@@ -697,29 +687,13 @@ void print_instruction(uint32_t addr){
 		}
 		
 	}
-	
-	
     
-    else if(op == 2 || op == 3)//J TYPE
-    {
-        uint32_t target;
-        target = addr & 0x03FFFFFF; //Puts 26 bits of PC into target  
-        
-        if(op == 2)//J
-        {
-          printf("\n J $%d", target);
-        }
-        else if(op == 3)//JAL
-        {
-           printf("\nJAL $%d", target);
-        }
-    }
-    
-    else //I TYPE
+    else //I or J TYPE
     {  
-        uint32_t target, offset;
-        target = immediate >> 2;    //target = immediate shifted left 2 bits
+        uint32_t target, offset, jTarget;
+        target = immediate << 2;    //target = immediate shifted left 2 bits
         offset = immediate;
+		jTarget = addr & 0x03FFFFFF;	//Puts 26 bits of PC into jTarget
         rs = addr >> 21;
         rs = rs & 0b00011111;
         rt = addr >> 16;
@@ -738,6 +712,13 @@ void print_instruction(uint32_t addr){
         
         switch(op)
         {
+			
+			case 0b000010:	//J
+				printf("\n J $%d", jTarget);
+				
+			case 0b000011:	//JAL
+				printf("\nJAL $%d", jTarget);
+				
             case 0b001000:  //ADDI
                printf("\nADDI $%d, $%d, %d", rt, rs, immediate);
                 
