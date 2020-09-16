@@ -318,7 +318,7 @@ void handle_instruction()
 	uint32_t addr;
 	addr = mem_read_32(CURRENT_STATE.PC);	//Gets instruction value from current state of PC
 	uint8_t op, rs, rt, rd, shamt, funct, temp;
-	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
+	op = (addr & 0xFC000000) >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction, 0xFC000000 is 0b111111000...(32 bits)
 	uint16_t immediate;
    	immediate = addr & 0b1111111111111111; //first 16 bits of addr
 	
@@ -616,22 +616,24 @@ void print_instruction(uint32_t addr){
 	4. Instead of performing operation, simply print the instructions inputs/outputs
 	*/
 	
+	uint32_t address = mem_read_32(addr);
+	
 	uint8_t op, rs, rt, rd, shamt, funct;
-	op = addr >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction
+	op = (address & 0xFC000000) >> 26;	//opcode is located in bits 26-31 so increment to bit 26 of instruction, 0xFC000000 is 0b111111000...(32 bits)
         uint16_t immediate;
-   	immediate = addr & 0b1111111111111111; //first 16 bits of addr
+   	immediate = address & 0b1111111111111111; //first 16 bits of addr
 	
 	if(op == 0)//R TYPE
 	{
-		rs = addr >> 21;	//rs is located in bits 21-25
+		rs = address >> 21;	//rs is located in bits 21-25
 		rs = rs & 0b00011111;	//Bit mask 3 leftmost bits
-		rt = addr >> 16;	//rt is located in bits 16-20
+		rt = address >> 16;	//rt is located in bits 16-20
 		rt = rt & 0b00011111;	//Bit mask 3 leftmost bits
-		rd = addr >> 11;	//rd is located in bits 11-15
+		rd = address >> 11;	//rd is located in bits 11-15
 		rd = rd & 0b00011111;	//Bit mask 3 leftmost bits
-		shamt = addr >> 6;	//shamt is located in bits 6-10
+		shamt = address >> 6;	//shamt is located in bits 6-10
 		shamt = shamt & 0b00011111;	//Bit mask 3 leftmost bits
-		funct = addr;		//function code is located in bits 0-5
+		funct = address;		//function code is located in bits 0-5
 		funct = funct & 0b00111111;	//Bit mask 2 leftmost bits
 		
 		switch(funct)//print out each function by op code
