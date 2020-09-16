@@ -726,7 +726,7 @@ void print_instruction(uint32_t addr){
                 printf("\nADDIU $%d, $%d, %d", rt, rs, immediate);
             
             case 0b001100:  //ANDI
-                printf("\nANDI $%d, $%d, %d", rt, rs, immediate");
+                printf("\nANDI $%d, $%d, %d", rt, rs, immediate);
                 
             case 0b000100:  //BEQ
                 printf("\nBEQ $%d, $%d, %d", rs, rt, immediate);
