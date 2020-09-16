@@ -695,13 +695,12 @@ void print_instruction(uint32_t addr){
         uint32_t target, offset, jTarget;
         target = immediate << 2;    //target = immediate shifted left 2 bits
         offset = immediate;
-		jTarget = addr & 0x03FFFFFF;	//Puts 26 bits of PC into jTarget
-        rs = addr >> 21;
+		jTarget = address & 0x03FFFFFF;	//Puts 26 bits of PC into jTarget
+        rs = (address & 0x03E00000) >> 21;
         rs = rs & 0b00011111;
-        rt = addr >> 16;
+        rt = (address & 0x001F0000) >> 16;
         rt = rt & 0b00011111;
-        funct = addr;
-        funct = funct & 0b00111111;
+
         if (target >> 15)   //negative number
         {
             target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
