@@ -423,51 +423,45 @@ void handle_instruction()
     else //I or J TYPE
     {  
         uint32_t target, offset, jTarget;
-        target = immediate << 2;    //target = immediate shifted left 2 bits
-        offset = immediate;
-		jTarget = addr & 0x03FFFFFF; //Puts 26 bits of PC into jTarget
-        rs = addr >> 21;
-        rs = rs & 0b00011111;
-        funct = addr;
-        funct = funct & 0b00111111;
-        rt = addr >> 16;
-        rt = rt & 0b00011111;
-        if (target >> 15)   //negative number
+        target = immediate << 2;    //target = immediate shifted left 2 bits, used for branch equations
+        offset = immediate;	//Used for Store/load equations
+	jTarget = addr & 0x03FFFFFF; //Puts 26 bits of PC into jTarget, used for J type instructions
+        rs = addr >> 21;	//rs is located in bits 21-25
+        rs = rs & 0b00011111;	//Bit mask left most bits
+        rt = addr >> 16;	//rt is located in bits 16-20
+        rt = rt & 0b00011111;	//Bit mask left most bits
+        if (target >> 15)   //Signed bit is 1 so negative number
         {
             target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
         }
-        if (offset >> 15)   //negative number
+        if (offset >> 15)   //Signed bit is 1 so negative number
         {
             offset = 0xFFFF0000 | offset;   //offset is sign extended if negative
         }
-        offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
+        offset = offset + CURRENT_STATE.REGS[rs];   //Used for load/store instructions (offset + base(rs) and sign extended)
         
         switch(op)
         {
-			case 0b000010:	//J
-				NEXT_STATE.PC = jTarget << 2;   //Shift program counter left 2 bits delayed by 1 instruction
+		case 0b000010:	//J
+			NEXT_STATE.PC = jTarget << 2;   //Shift program counter left 2 bits delayed by 1 instruction
 				
-			case 0b000011:	//JAL
-				NEXT_STATE.PC = target << 2;   //shift program counter left 2 bits 
-            	NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
+		case 0b000011:	//JAL
+			NEXT_STATE.PC = jTarget << 2;   //shift program counter left 2 bits 
+            		NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
 				
             case 0b001000:  //ADDI
-                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;	//ADDI: rt = rs + immediate
                 
             case 0b001001:  //ADDIU
-                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;	//ADDIU: rt = rs + immediate
             
             case 0b001100:  //ANDI
-                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;	//ANDI: rt = rs & immediate
                 
             case 0b000100:  //BEQ
                 if (CURRENT_STATE.REGS[rt] == CURRENT_STATE.REGS[rs])
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;   //If equal, program branches to target address w/ delay of one instruction
-                }
-                else
-                {
-                    printf("rt != rs\n");
                 }
             
             case 0b000001:  //BGEZ or BLTZ
@@ -476,100 +470,85 @@ void handle_instruction()
                     if (CURRENT_STATE.REGS[rs] >> 31)   //Check if sign bit is set
                     {
                         NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
-                        printf("Sign bit of rs is set\n");
                     }
                     else    //BGEZ
                     {
                         NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
-                        printf("Sign bit of rs is not set\n");
                     }
                 }
-            
-            
+                     
             case 0b000111:  //BGTZ
                 if ((CURRENT_STATE.REGS[rs] != 0x00000000) && ~(CURRENT_STATE.REGS[rs] >> 31)) //if rs != 0 and sign bit of rs is cleared
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target; //If so, program branches to target address w/ delay of one instruction
-                }
-                else 
-                {
-                    printf("rs = 0 or sign bit is not cleared\n");
-                }            
+                }          
             
             case 0b000110:  //BLEZ
                 if ((CURRENT_STATE.REGS[rs] == 0x00000000) || (CURRENT_STATE.REGS[rs] >> 31))   //if rs = 0 or sign bit of rs is set
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
-                }
-                else
-                {
-                    printf("rs != 0 or sign bit is cleared\n");
-                }           
+                }          
      
             case 0b000101:  //BNE
                 if (CURRENT_STATE.REGS[rt] != CURRENT_STATE.REGS[rs])   //compare current contents of rs & rt
                 {
                     NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
                 }
-                else
-                {
-                    printf("rs = rt\n");
-                }
                 
             case 0b100000:  //LB
 		{ 
 			uint32_t byte;
                 	byte = 0xFF & mem_read_32(offset);  //load first byte of address into byte
-               		 if (byte >> 7)  //negative number
+               		 if (byte >> 7)  //Signed bit is 1 then negative number
                		 {
                		     byte = 0xFFFFFF00 | byte;   //sign extended
                		 }    
-               			 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
+               		 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
 		}
             case 0b100001:  //LH
               {
-               uint32_t hw;
-                hw = 0xFFFF & mem_read_32(offset);  //load halfword of address into hw
-                if (hw >> 15)   //negative number
-                {
-                    hw = 0xFFFF0000 | hw;   //sign extended
-                }    
-                NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
+               		uint32_t hw;
+               		hw = 0xFFFF & mem_read_32(offset);  //load halfword of address into hw
+               		if (hw >> 15)   //Signed bit is 1 then negative number
+                	{
+                    		hw = 0xFFFF0000 | hw;   //sign extended
+                	}    
+                	NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
                } 
             case 0b001111:  //LUI
-                NEXT_STATE.REGS[rt] = immediate << 16;
+                NEXT_STATE.REGS[rt] = immediate << 16;	//LUI: rt = immediate shifted left 16 bits
             
             case 0b100011:  //LW
-                NEXT_STATE.REGS[rt] = mem_read_32(offset);  //load contents of offset into rt
+                NEXT_STATE.REGS[rt] = mem_read_32(offset);  //load contents of offset into rt (offset is already sign extended)
                 
             case 0b001101:  //ORI
-                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;	//ORI: rt = rs | immediate
                 
             
             case 0b101000:  //SB
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFF);   //Stores least significant byte of rt into offset
             
             case 0b101001:  //SH
-                mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant word of rt into offset
+                mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant halfwordword of rt into offset
             
             case 0b001010:  //SLTI
              {
                 uint32_t result;
                 if (CURRENT_STATE.REGS[rs] < immediate)
                 {
-                    result = 0x00000001;    //result = 1
+                    result = 0x00000001;    //result = 1 if rs is less than immediate
                 }
                 else
                 {
-                    result = 0x00000000;    //result = 0
+                    result = 0x00000000;    //result = 0 if rs is greater than immediate
                 } 
                 NEXT_STATE.REGS[rt] = result;   //place result into rt   
             }
             case 0b101011:  //SW
-                mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores contentes of rt into offset
+                mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores word of rt into offset
             
             case 0b001110:  //XORI
-                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;
+                NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;	//rt = rs ^ immediate
                 
             default: 
                 break;
@@ -693,92 +672,93 @@ void print_instruction(uint32_t addr){
     else //I or J TYPE
     {  
         uint32_t target, offset, jTarget;
-        target = immediate << 2;    //target = immediate shifted left 2 bits
-        offset = immediate;
-		jTarget = address & 0x03FFFFFF;	//Puts 26 bits of PC into jTarget
-        rs = (address & 0x03E00000) >> 21;
-        rs = rs & 0b00011111;
-        rt = (address & 0x001F0000) >> 16;
-        rt = rt & 0b00011111;
+        target = immediate << 2;    //target = immediate shifted left 2 bits, used for branch equations
+        offset = immediate;	//Used for store/load equations
+	jTarget = address & 0x03FFFFFF;	//Puts 26 bits of PC into jTarget
+        rs = address >> 21;	//rs is located in bits 21-25
+        rs = rs & 0b00011111;	//bit mask leftmost bits
+        rt = address >> 16;	//rt is located in bits 16-20
+        rt = rt & 0b00011111;	//bit mask leftmost bits
 
-        if (target >> 15)   //negative number
+        if (target >> 15)   //Sign bit is 1 so negative number
         {
             target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
         }
-        if (offset >> 15)   //negative number
+        if (offset >> 15)   //Sign bit is 1 so negative number
         {
             offset = 0xFFFF0000 | offset;   //offset is sign extended if negative
         }
-        offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
+        offset = offset + CURRENT_STATE.REGS[rs];   //Used for load/store instructions
         
         switch(op)
         {
 			
-			case 0b000010:	//J
-				printf("\n J %x", jTarget);
+	    case 0b000010:	//J
+		printf("\n J %d", jTarget);	//Format: J target
 				
-			case 0b000011:	//JAL
-				printf("\nJAL %x", jTarget);
+       	    case 0b000011:	//JAL
+		printf("\nJAL %d", jTarget);	//Format: J target
 				
             case 0b001000:  //ADDI
-               printf("\nADDI $%d, $%d, %x", rt, rs, immediate);
+               printf("\nADDI $%d, $%d, %d", rt, rs, immediate);	//Format: ADDI rt, rs, immediate
                 
             case 0b001001:  //ADDIU
-                printf("\nADDIU $%d, $%d, %x", rt, rs, immediate);
+                printf("\nADDIU $%d, $%d, %d", rt, rs, immediate);	//Format: ADDIU rt, rs, immediate
             
             case 0b001100:  //ANDI
-                printf("\nANDI $%d, $%d, %x", rt, rs, immediate);
+                printf("\nANDI $%d, $%d, %d", rt, rs, immediate);	//Format: ANDI rt, rs, immediate
                 
             case 0b000100:  //BEQ
-                printf("\nBEQ $%d, $%d, %x", rs, rt, immediate);
+                printf("\nBEQ $%d, $%d, %d", rs, rt, immediate);	//Format: BEQ rs, rt, immediate
             
             case 0b000001:  //BGEZ or BLTZ 
-			if (rt == 0b00000)  //BLTZ
-			{
-		       printf("\nBLTZ $%d, %x", rs, immediate);
-			}
-			else	//BGEZ 0b00001
+		if (rt == 0b00000)  //BLTZ
+		{
+		        printf("\nBLTZ $%d, %d", rs, immediate);	//Format: BLTZ rs, immediate
+		}
+		else	//BGEZ 0b00001
 	        {
-				printf("\nBGEZ $%d, %x", rs, immediate);	       
+			printf("\nBGEZ $%d, %d", rs, immediate);	//Format: BGEZ rs, immediate	       
 	        }
             
             case 0b000111:  //BGTZ
-               printf("\nBGTZ $%d, %x", rs, immediate);
+               printf("\nBGTZ $%d, %d", rs, immediate);		//Format: BGTZ rs, immediate
             
             case 0b000110:  //BLEZ
-               printf("\nBLEZ $%d, %x", rs, immediate);
+               printf("\nBLEZ $%d, %d", rs, immediate);		//Format: BLEZ rs, immediate
+			
             case 0b000101:  //BNE
-               printf("\nBNE $%d, $%d, %x", rs, rt, immediate);
+               printf("\nBNE $%d, $%d, %d", rs, rt, immediate);	//Format: BNE rs, rt, immediate
                 
             case 0b100000:  //LB
-               printf("\nLB %d, %x($%d)", rt, immediate, rs);
+               printf("\nLB %d, %d($%d)", rt, immediate, rs);	//Format: LB rt, immediate, rs
            	
             case 0b100001:  //LH
-               printf("\nLH $%d, %x($%d)", rt, immediate, rs);
+               printf("\nLH $%d, %d($%d)", rt, immediate, rs);	//Format: LH rt, immediate, rs
                 
             case 0b001111:  //LUI
-               printf("\nLUI $%d, %x", rt, immediate);
+               printf("\nLUI $%d, %d", rt, immediate);	//Format: LUI rt, immediate
             
             case 0b100011:  //LW
-               printf("\nLW $%d, %x($%d)", rt, immediate, rs);
+               printf("\nLW $%d, %d($%d)", rt, immediate, rs);	//Format: LW rt, immediate, rs
 					   
             case 0b001101:  //ORI  
-                printf("\nORI $%d, $%d, %x", rt, rs, immediate);
+                printf("\nORI $%d, $%d, %d", rt, rs, immediate);	//Format: ORI rt, rs, immediate
             
             case 0b101000:  //SB
-              printf("\nSB $%d, %x($%d)", rt, immediate, rs);
+              printf("\nSB $%d, %d($%d)", rt, immediate, rs);	//Format: SB rt, immediate(rs)
 					   
             case 0b101001:  //SH
-            	printf("\nSH $%d, %x($%d)", rt, immediate, rs);
+            	printf("\nSH $%d, %d($%d)", rt, immediate, rs);	//Format: SH rt, immediate(rs)
 					   
             case 0b001010:  //SLTI
-              printf("\nSLTI $%d, $%d, %x", rt, rs, immediate);
+              printf("\nSLTI $%d, $%d, %d", rt, rs, immediate);	//Format: SLTI rt, rs, immediate
             
             case 0b101011:  //SW
-               printf("\nSW $%d, %x($%d)", rt, immediate, rs);
+               printf("\nSW $%d, %d($%d)", rt, immediate, rs);	//Format: SW rt, immediate(rs)
             
             case 0b001110:  //XORI
-             	printf("\nXORI $%d, $%d, %x", rt, rs, immediate);
+             	printf("\nXORI $%d, $%d, %d", rt, rs, immediate);	//Format XORI rt, rs, immediate
                 
             default: 
                 break;
