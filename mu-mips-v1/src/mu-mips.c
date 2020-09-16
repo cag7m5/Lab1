@@ -423,6 +423,13 @@ void handle_instruction()
     {  
         uint32_t target, offset;
         target = immediate >> 2;    //target = immediate shifted left 2 bits
+        offset = immediate;
+        rs = addr >> 21;
+        rs = rs & 0b00011111;
+        funct = addr;
+        funct = funct & 0b00111111;
+        rt = addr >> 16;
+        rt = rt & 0b00011111;
         if (target >> 15)   //negative number
         {
             target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
@@ -511,14 +518,15 @@ void handle_instruction()
                			 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
 		}
             case 0b100001:  //LH
-                uint32_t hw;
+              {
+               uint32_t hw;
                 hw = 0xFFFF & mem_read_32(offset);  //load halfword of address into hw
                 if (hw >> 15)   //negative number
                 {
                     hw = 0xFFFF0000 | hw;   //sign extended
                 }    
                 NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
-                
+               } 
             case 0b001111:  //LUI
                 NEXT_STATE.REGS[rt] = immediate << 16;
             
@@ -536,6 +544,7 @@ void handle_instruction()
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant word of rt into offset
             
             case 0b001010:  //SLTI
+             {
                 uint32_t result;
                 if (CURRENT_STATE.REGS[rs] < immediate)
                 {
@@ -546,7 +555,7 @@ void handle_instruction()
                     result = 0x00000000;    //result = 0
                 } 
                 NEXT_STATE.REGS[rt] = result;   //place result into rt   
-            
+            }
             case 0b101011:  //SW
                 mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores contentes of rt into offset
             
@@ -691,6 +700,13 @@ void print_instruction(uint32_t addr){
     {  
         uint32_t target, offset;
         target = immediate >> 2;    //target = immediate shifted left 2 bits
+        offset = immediate;
+        rs = addr >> 21;
+        rs = rs & 0b00011111;
+        rt = addr >> 16;
+        rt = rt & 0b00011111;
+        funct = addr;
+        funct = funct & 0b00111111;
         if (target >> 15)   //negative number
         {
             target = 0xFFFF0000 | target;   //target is sign extended if negative, used for branch instructions
@@ -701,7 +717,7 @@ void print_instruction(uint32_t addr){
         }
         offset = offset + CURRENT_STATE.REGS[rs];   //Used for load instructions
         
-        switch(op)
+        switch(funct)
         {
             case 0b001000:  //ADDI
                printf("\nADDI $%d, $%d, $%d", rt, rs, immediate);
