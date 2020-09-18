@@ -455,7 +455,7 @@ void handle_instruction()
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 				break;
             		case 0b001100 : //SYSCALL
-                		CURRENT_STATE.REGS[2] = 0xA;
+                		NEXT_STATE.REGS[2] = 0xA;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 				break;
             		case 0b100110 : //XOR
