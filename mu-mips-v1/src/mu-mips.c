@@ -410,12 +410,16 @@ void handle_instruction()
             		case 0b101010 : //SLT
                 		{
                    			if (((signed)(CURRENT_STATE.REGS[rs])) < ((signed)(CURRENT_STATE.REGS[rt])))
-                        			NEXT_STATE.REGS[rd] = 1;
+					{
+						NEXT_STATE.REGS[rd] = 1;
 						NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-                   			else
+					}
+					else
+					{
                         			NEXT_STATE.REGS[rd] = 0;
 						NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-                		}
+					}
+				}
             		case 0b000011 : //SRA
                     		NEXT_STATE.REGS[rd] = ((signed)(CURRENT_STATE.REGS[rt])) >> shamt;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
