@@ -340,13 +340,16 @@ void handle_instruction()
 			case 0b100000 : //ADD
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
 
 			case 0b100001 : //ADDU
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
 			case 0b100100 : //AND
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;	
+				break;
 		 	case 0b011010 : //DIV
                 	{
                     		if(CURRENT_STATE.REGS[rt])//make sure rt is not 0
@@ -355,6 +358,7 @@ void handle_instruction()
                         		NEXT_STATE.HI = CURRENT_STATE.REGS[rs] % CURRENT_STATE.REGS[rt];
                     		}
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
                		}
             		case 0b011011 : //DIVU
                 	{
@@ -364,32 +368,41 @@ void handle_instruction()
                         		NEXT_STATE.HI = (0 | CURRENT_STATE.REGS[rs]) % (0 | CURRENT_STATE.REGS[rt]);
                     		}
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
                 	}
            		case 0b001001 : //JALR
                 		temp = CURRENT_STATE.REGS[rs];
                 		NEXT_STATE.REGS[rd] = (CURRENT_STATE.PC + 8);
                 		NEXT_STATE.PC = temp;
+				break;
 			case 0b001000 : //JR
               		  	temp = CURRENT_STATE.REGS[rs];
                 		NEXT_STATE.PC = temp;
+				break;
             		case 0b010000 : //MFHI
                			NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b010010 : // MFLO
               		  	NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
+					
            		case 0b010001 : //MTHI
                 		NEXT_STATE.HI = CURRENT_STATE.REGS[rs];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b010011 : //MTLO
                 		NEXT_STATE.LO = CURRENT_STATE.REGS[rs];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b011000 : //MULT
 				{
                     			uint64_t result = CURRENT_STATE.REGS[rs] * CURRENT_STATE.REGS[rt];
                     			NEXT_STATE.LO = result;
                     			NEXT_STATE.HI = result << 32;
 					NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+					break;
 				}
             		case 0b011001 : //MULTU
                 		{
@@ -397,16 +410,20 @@ void handle_instruction()
                    			 NEXT_STATE.LO = result;
                     			 NEXT_STATE.HI = result << 32;
 					NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+					break;
                 		}
            		case 0b100111 : //NOR
                 		NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b100101 : //OR
                	 		NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b000000 : //SLL
                			NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << shamt;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b101010 : //SLT
                 		{
                    			if (((signed)(CURRENT_STATE.REGS[rs])) < ((signed)(CURRENT_STATE.REGS[rt])))
@@ -419,25 +436,32 @@ void handle_instruction()
                         			NEXT_STATE.REGS[rd] = 0;
 						NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 					}
+					break;
 				}
             		case 0b000011 : //SRA
                     		NEXT_STATE.REGS[rd] = ((signed)(CURRENT_STATE.REGS[rt])) >> shamt;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
 	    		case 0b000010 : //SRL
                     		NEXT_STATE.REGS[rd] = ((unsigned)(CURRENT_STATE.REGS[rt])) >> shamt;//unsigned forces it to fill zeros
             			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
 			case 0b100010 : //SUB
                 		NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b100011 : //SUBU
                			NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b001100 : //SYSCALL
                 		CURRENT_STATE.REGS[2] = 0xA;
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
             		case 0b100110 : //XOR
 				NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] ^ CURRENT_STATE.REGS[rt];
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+				break;
 
             		default : break;
         }
@@ -468,28 +492,36 @@ void handle_instruction()
         {
 		case 0b000010:	//J
 			NEXT_STATE.PC = jTarget << 2;   //Shift program counter left 2 bits delayed by 1 instruction
+			break;
 				
 		case 0b000011:	//JAL
 			NEXT_STATE.PC = jTarget << 2;   //shift program counter left 2 bits 
             		NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8; //Address of instruction after delay slot is placed into link register r31
+			break;
 				
             case 0b001000:  //ADDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;	//ADDI: rt = rs + immediate
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b001001:  //ADDIU
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;	//ADDIU: rt = rs + immediate
             	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b001100:  //ANDI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;	//ANDI: rt = rs & immediate
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b000100:  //BEQ
-                if (CURRENT_STATE.REGS[rt] == CURRENT_STATE.REGS[rs])
-                {
-                    NEXT_STATE.PC = CURRENT_STATE.PC + target;   //If equal, program branches to target address w/ delay of one instruction
-                }
-		else
 		{
-			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+               		if (CURRENT_STATE.REGS[rt] == CURRENT_STATE.REGS[rs])
+                	{
+                    		NEXT_STATE.PC = CURRENT_STATE.PC + target;   //If equal, program branches to target address w/ delay of one instruction
+                	}
+			else
+			{
+				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+			}
+			break;
 		}
             case 0b000001:  //BGEZ or BLTZ
                 if (rt == 0b00000)  //BLTZ
@@ -502,36 +534,45 @@ void handle_instruction()
                     {
                         NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
                     }
+		    break;
                 }
                      
             case 0b000111:  //BGTZ
-                if ((CURRENT_STATE.REGS[rs] != 0x00000000) && ~(CURRENT_STATE.REGS[rs] >> 31)) //if rs != 0 and sign bit of rs is cleared
-                {
-                    NEXT_STATE.PC = CURRENT_STATE.PC + target; //If so, program branches to target address w/ delay of one instruction
-                }          
-		else
 		{
-			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-		}
+                	if ((CURRENT_STATE.REGS[rs] != 0x00000000) && ~(CURRENT_STATE.REGS[rs] >> 31)) //if rs != 0 and sign bit of rs is cleared
+                	{
+                	    NEXT_STATE.PC = CURRENT_STATE.PC + target; //If so, program branches to target address w/ delay of one instruction
+                	}          
+			else
+			{
+				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+			}
+			break;
+		}	
             case 0b000110:  //BLEZ
-                if ((CURRENT_STATE.REGS[rs] == 0x00000000) || (CURRENT_STATE.REGS[rs] >> 31))   //if rs = 0 or sign bit of rs is set
-                {
-                    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
-                }          
-     		else
 		{
-			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+                	if ((CURRENT_STATE.REGS[rs] == 0x00000000) || (CURRENT_STATE.REGS[rs] >> 31))   //if rs = 0 or sign bit of rs is set
+                	{
+                	    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                	}          
+     			else
+			{
+				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+			}
+			break;
 		}
             case 0b000101:  //BNE
-                if (CURRENT_STATE.REGS[rt] != CURRENT_STATE.REGS[rs])   //compare current contents of rs & rt
-                {
-                    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
-                }
-		else
 		{
-			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-		}
-                
+                	if (CURRENT_STATE.REGS[rt] != CURRENT_STATE.REGS[rs])   //compare current contents of rs & rt
+                	{
+                	    NEXT_STATE.PC = CURRENT_STATE.PC + target;  //If so, program branches to target address w/ delay of one instruction
+                	}
+			else
+			{
+				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+			}
+                	break
+		}		
             case 0b100000:  //LB
 		{ 
 			uint32_t byte;
@@ -542,6 +583,7 @@ void handle_instruction()
                		 }    
                		 NEXT_STATE.REGS[rt] = byte; //load contents of byte into rt
 			NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+			break;
 		}
             case 0b100001:  //LH
               {
@@ -553,24 +595,28 @@ void handle_instruction()
                 	}    
                 	NEXT_STATE.REGS[rt] = hw;   //load contents of hw into rt
 		        NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		        break;
                } 
             case 0b001111:  //LUI
                 NEXT_STATE.REGS[rt] = immediate << 16;	//LUI: rt = immediate shifted left 16 bits
 		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-            
+            	break;
             case 0b100011:  //LW
                 NEXT_STATE.REGS[rt] = mem_read_32(offset);  //load contents of offset into rt (offset is already sign extended)
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b001101:  //ORI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;	//ORI: rt = rs | immediate
 		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
-            
+		break;
             case 0b101000:  //SB
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFF);   //Stores least significant byte of rt into offset
             	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b101001:  //SH
                 mem_write_32(offset, CURRENT_STATE.REGS[rt] & 0xFFFF);  //Stores least significant halfwordword of rt into offset
             	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b001010:  //SLTI
              {
                 uint32_t result;
@@ -584,13 +630,16 @@ void handle_instruction()
                 } 
                 NEXT_STATE.REGS[rt] = result;   //place result into rt   
 		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             }
             case 0b101011:  //SW
                 mem_write_32(offset, CURRENT_STATE.REGS[rt]);   //Stores word of rt into offset
 		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             case 0b001110:  //XORI
                 NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;	//rt = rs ^ immediate
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+		break;
             default: 
                 break;
 
@@ -660,51 +709,76 @@ void print_instruction(uint32_t addr){
 		{
 			case 0b100000 : //ADD
 				printf("\nADD $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b100001 : //ADDU	
 				printf("\nADDU $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b100100 : //AND
 				printf("\nAND $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b011010 : //DIV
 				printf("\nDIV $%d, $%d", rs, rt);
+				break;
 			case 0b011011 : //DIVU
 				printf("\nDIV $%d, $%d", rs, rt);
+				break;
 			case 0b001001 : //JALR
+				{
 				printf("\nJALR $%d", rs);
 				printf("\nJALR $%d, $%d", rd, rs);
+				break;
+				}
 			case 0b001000 : //JR
 				printf("\nJR $%d", rs);
+				break;
 			case 0b010000 : //MFHI
 				printf("\nMFHI $%d", rd);
+				break;
 			case 0b010010 : // MFLO
 				printf("\nMFLO $%d", rd);
+				break;
 			case 0b010001 : //MTHI
 				printf("\nMTHI $%d", rs);
+				break;
 			case 0b010011 : //MTLO
 				printf("\nMTLO $%d", rs);
+				break;
 			case 0b011000 : //MULT
 				printf("\nMULT $%d, $%d", rs, rt);
+				break;
 			case 0b011001 : //MULTU
 				printf("\nMULTU $%d, $%d", rs, rt);
+				break;
 			case 0b100111 : //NOR
 				printf("\nNOR $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b100101 : //OR
 				printf("\nOR $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b000000 : //SLL
 				printf("\nSLL $%d, $%d, $%d", rd, rt, shamt);
+				break;
 			case 0b101010 : //SLT
 				printf("\nSLT $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b000011 : //SRA
 				printf("\nSRA $%d, $%d, $%d", rd, rt, shamt);
+				break;
 			case 0b000010 : //SRL
 				printf("\nSRL $%d, $%d, $%d", rd, rt, shamt);
+				break;
 			case 0b100010 : //SUB
 				printf("\nSUB $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b100011 : //SUBU
 				printf("\nSUBU $%d, $%d, $%d", rd, rs, rt);
+				break;
 			case 0b001100 : //SYSCALL
 				printf("\nSYSCALL");
+				break;
 			case 0b100110 : //XOR
 				printf("\nXOR $%d, $%d, $%d", rd, rs, rt);
+				break;
 			default : break;	
 		}
 		
@@ -736,71 +810,75 @@ void print_instruction(uint32_t addr){
 			
 	    case 0b000010:	//J
 		printf("\n J %d", jTarget);	//Format: J target
+		break;
 				
        	    case 0b000011:	//JAL
 		printf("\nJAL %d", jTarget);	//Format: J target
-				
+		break;
             case 0b001000:  //ADDI
-               printf("\nADDI $%d, $%d, %d", rt, rs, immediate);	//Format: ADDI rt, rs, immediate
-                
+                printf("\nADDI $%d, $%d, %d", rt, rs, immediate);	//Format: ADDI rt, rs, immediate
+                break;
             case 0b001001:  //ADDIU
                 printf("\nADDIU $%d, $%d, %d", rt, rs, immediate);	//Format: ADDIU rt, rs, immediate
-            
+            	break;
             case 0b001100:  //ANDI
                 printf("\nANDI $%d, $%d, %d", rt, rs, immediate);	//Format: ANDI rt, rs, immediate
-                
+                break;
             case 0b000100:  //BEQ
                 printf("\nBEQ $%d, $%d, %d", rs, rt, immediate);	//Format: BEQ rs, rt, immediate
-            
+            	break;
             case 0b000001:  //BGEZ or BLTZ 
-		if (rt == 0b00000)  //BLTZ
 		{
-		        printf("\nBLTZ $%d, %d", rs, immediate);	//Format: BLTZ rs, immediate
+			if (rt == 0b00000)  //BLTZ
+			{
+			        printf("\nBLTZ $%d, %d", rs, immediate);	//Format: BLTZ rs, immediate
+			}
+			else	//BGEZ 0b00001
+	        	{
+				printf("\nBGEZ $%d, %d", rs, immediate);	//Format: BGEZ rs, immediate	       
+	        	}
+            		break;
 		}
-		else	//BGEZ 0b00001
-	        {
-			printf("\nBGEZ $%d, %d", rs, immediate);	//Format: BGEZ rs, immediate	       
-	        }
-            
             case 0b000111:  //BGTZ
-               printf("\nBGTZ $%d, %d", rs, immediate);		//Format: BGTZ rs, immediate
+                printf("\nBGTZ $%d, %d", rs, immediate);		//Format: BGTZ rs, immediate
+		break;
             
             case 0b000110:  //BLEZ
-               printf("\nBLEZ $%d, %d", rs, immediate);		//Format: BLEZ rs, immediate
-			
+                printf("\nBLEZ $%d, %d", rs, immediate);		//Format: BLEZ rs, immediate
+		break;
             case 0b000101:  //BNE
                printf("\nBNE $%d, $%d, %d", rs, rt, immediate);	//Format: BNE rs, rt, immediate
-                
+               break;
             case 0b100000:  //LB
                printf("\nLB %d, %d($%d)", rt, immediate, rs);	//Format: LB rt, immediate, rs
-           	
+               break;
             case 0b100001:  //LH
                printf("\nLH $%d, %d($%d)", rt, immediate, rs);	//Format: LH rt, immediate, rs
-                
+               break;
             case 0b001111:  //LUI
                printf("\nLUI $%d, %d", rt, immediate);	//Format: LUI rt, immediate
-            
+	       break;
             case 0b100011:  //LW
                printf("\nLW $%d, %d($%d)", rt, immediate, rs);	//Format: LW rt, immediate, rs
-					   
+	       break;			   
             case 0b001101:  //ORI  
                 printf("\nORI $%d, $%d, %d", rt, rs, immediate);	//Format: ORI rt, rs, immediate
-            
+                break;
             case 0b101000:  //SB
               printf("\nSB $%d, %d($%d)", rt, immediate, rs);	//Format: SB rt, immediate(rs)
-					   
+	      break;				   
             case 0b101001:  //SH
             	printf("\nSH $%d, %d($%d)", rt, immediate, rs);	//Format: SH rt, immediate(rs)
-					   
+		break;			   
             case 0b001010:  //SLTI
               printf("\nSLTI $%d, $%d, %d", rt, rs, immediate);	//Format: SLTI rt, rs, immediate
-            
+              break;
             case 0b101011:  //SW
                printf("\nSW $%d, %d($%d)", rt, immediate, rs);	//Format: SW rt, immediate(rs)
-            
+               break;
             case 0b001110:  //XORI
              	printf("\nXORI $%d, $%d, %d", rt, rs, immediate);	//Format XORI rt, rs, immediate
-                
+                break;
             default: 
                 break;
 
