@@ -571,7 +571,7 @@ void handle_instruction()
 			{
 				NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 			}
-                	break
+                	break;
 		}		
             case 0b100000:  //LB
 		{ 
